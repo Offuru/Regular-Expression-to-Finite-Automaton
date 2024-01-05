@@ -1,5 +1,31 @@
 #include "AFD.h"
 
+void AFD::updateIndexes(uint32_t index)
+{
+	std::queue<std::shared_ptr<State>> states;
+	std::unordered_set<State*> added;
+
+	states.push(m_begin);
+
+	while (!states.empty())
+	{
+		State* state = states.front().get();
+		states.pop();
+		if (added.find(state) != added.end())
+			continue;
+		added.insert(state);
+		state->name = "q" + std::to_string(index++);
+		for (const auto& next : state->connections)
+			states.push(next.second);
+	}
+}
+
+void AFD::addTransitions(const AFD& other)
+{
+	for (const auto& state : other.m_transitions)
+		m_transitions.push_back(state);
+}
+
 AFD::AFD(char symbol)
 {
 	m_begin = std::make_shared<State>();
@@ -33,41 +59,69 @@ AFD::~AFD()
 	}
 }
 
-AFD& AFD::operator&=(const AFD& other)
+AFD& AFD::operator&=(AFD& other)
 {
 	uint32_t index = std::stoi(m_end->name.substr(1, m_end->name.size() - 1)) + 1;
 
-	std::queue<std::shared_ptr<State>> states;
-
-	states.push(other.m_begin);
-
-	while (!states.empty())
-	{
-		State* state = states.front().get();
-		states.pop();
-		state->name = "q" + std::to_string(index++);
-		for (const auto& next : state->connections)
-			states.push(next.second);
-	}
+	other.updateIndexes(index);
+	m_alphabet = getAlphabetUnion(*this, other);
+	addTransitions(other);
 
 	m_end->final = false;
 	m_end->connections.emplace_back(lambda, other.m_begin);
 	m_end = other.m_end;
 
-	std::vector<char> alphabet;
-
-	std::set_union(m_alphabet.cbegin(), m_alphabet.cend(),
-				   other.m_alphabet.cbegin(), other.m_alphabet.cend(),
-				   std::back_inserter(alphabet));
-
-	m_alphabet = alphabet;
-
-	for (const auto& transition : other.m_transitions)
-		m_transitions.push_back(transition);
-
 	m_finalStates = other.m_finalStates;
+	
+	return *this;
+}
+
+AFD& AFD::operator|=(AFD& other)
+{
+	uint32_t index = 1;
+	updateIndexes(index);
+	index = std::stoi(m_end->name.substr(1, m_end->name.size() - 1)) + 1;
+	other.updateIndexes(index);
+	other.m_end->final = false;
+	index = std::stoi(other.m_end->name.substr(1, other.m_end->name.size() - 1)) + 1;
+
+	m_alphabet = getAlphabetUnion(*this, other);
+
+	std::shared_ptr<State> newStart = std::make_shared<State>();
+	newStart->name = "q0";
+	newStart->connections.emplace_back(lambda, m_begin);
+	newStart->connections.emplace_back(lambda, other.m_begin);
+
+	m_transitions.push_front(newStart);
+
+	addTransitions(other);
+	
+	std::shared_ptr<State> newEnd = std::make_shared<State>();
+	newEnd->name = "q" + std::to_string(index);
+	newEnd->final = true;
+
+	m_transitions.push_back(newEnd);
+
+	m_end->connections.emplace_back(lambda, newEnd);
+	other.m_end->connections.emplace_back(lambda, newEnd);
+
+	m_begin = newStart;
+	m_end = newEnd;
+
+	m_finalStates = { m_end };
 
 	return *this;
+}
+
+std::vector<char> getAlphabetUnion(const AFD& afd1, const AFD& afd2)
+{
+	std::vector<char> alphabet;
+
+	std::set_union(afd1.m_alphabet.cbegin(), afd1.m_alphabet.cend(),
+		afd2.m_alphabet.cbegin(), afd2.m_alphabet.cend(),
+		std::back_inserter(alphabet));
+
+	return alphabet;
 }
 
 std::ostream& operator<<(std::ostream& out, const AFD& afd)

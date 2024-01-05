@@ -5,10 +5,12 @@ int main()
 {
 	AFD afd1('a');
 	AFD afd2('b');
-	
-	std::cout << afd1 << "\n\n\n";
+	AFD afd3('c');
 
-	afd1 &= afd2;
+
+	afd1 |= afd2;
+
+	afd1 &= afd3;
 
 	std::cout << afd1;
 }

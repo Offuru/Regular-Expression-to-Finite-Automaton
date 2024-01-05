@@ -1,39 +1,43 @@
 #pragma once
 #include <vector>
 #include <string>
+#include <queue>
+#include <print>
+#include <format>
+#include <unordered_map>
+#include <memory>
 
 class AFD
 {
 private:
 
-	using pairTransition = std::pair<std::string, char>;
-
-	const char lambda = '$';
+	static const char lambda = '$';
 
 	struct State
 	{
 		std::string name;
-		std::vector<std::pair<char,State*>> connections;
+		std::vector<std::pair<char,std::shared_ptr<State>>> connections;
+		bool final;
 	};
 
-	State* m_begin;
-	State* m_end;
-	std::vector<State*> m_states;
+	using transition = std::pair<char, std::shared_ptr<State>>;
+
+	std::shared_ptr<State> m_begin;
+	std::shared_ptr<State> m_end;
+	std::vector<std::shared_ptr<State>> m_transitions;
 	std::vector<char> m_alphabet;
-	std::vector<std::reference_wrapper<std::pair<char, State*>>> transitions;
+	std::vector<std::shared_ptr<State>> m_finalStates;
 
 public:
 
 	AFD(char);
-	AFD(const AFD& other);
-	AFD(AFD&& other);
-	AFD operator=(const AFD& other);
-	AFD operator=(AFD&& other);
 	~AFD();
 
-	AFD& operator&=(AFD&&);
-	AFD& operator|=(AFD&&);
-	AFD& operator*=(AFD&&);
-	AFD& operator+=(AFD&&);
+	AFD& operator&=(const AFD&);
+	AFD& operator|=(const AFD&);
+	AFD& operator*=(const AFD&);
+	AFD& operator+=(const AFD&);
+
+	friend std::ostream& operator<<(std::ostream&, const AFD&);
 };
 

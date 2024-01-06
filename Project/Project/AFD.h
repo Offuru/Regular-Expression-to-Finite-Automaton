@@ -18,7 +18,7 @@ private:
 	{
 		std::string name;
 		std::vector<std::pair<char,std::shared_ptr<State>>> connections;
-		bool final;
+		bool final = false;
 	};
 
 	using transition = std::pair<char, std::shared_ptr<State>>;
@@ -29,7 +29,7 @@ private:
 	std::vector<char> m_alphabet;
 	std::vector<std::shared_ptr<State>> m_finalStates;
 
-	void updateIndexes(uint32_t index);
+	void updateIndexes(uint32_t& index);
 
 	void addTransitions(const AFD& other);
 	
@@ -39,12 +39,14 @@ private:
 public:
 
 	AFD(char);
-	~AFD();
 
+	//concatenation
 	AFD& operator&=(AFD&);
+	//or
 	AFD& operator|=(AFD&);
-	AFD& operator*=(const AFD&);
-	AFD& operator+=(const AFD&);
+	//kleene star
+	AFD& operator++(int);
+
 
 	friend std::ostream& operator<<(std::ostream&, const AFD&);
 };

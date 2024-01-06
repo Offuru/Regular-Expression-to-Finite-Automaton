@@ -1,6 +1,6 @@
 #include "AFD.h"
 
-void AFD::updateIndexes(uint32_t index)
+void AFD::updateIndexes(uint32_t& index)
 {
 	std::queue<std::shared_ptr<State>> states;
 	std::unordered_set<State*> added;
@@ -43,22 +43,6 @@ AFD::AFD(char symbol)
 	m_finalStates.push_back(m_end);
 }
 
-AFD::~AFD()
-{
-	std::queue<std::shared_ptr<State>> states;
-	states.push(m_begin);
-
-	while (!states.empty())
-	{
-		State* state = states.front().get();
-		states.pop();
-
-		for (const auto& next : state->connections)
-			if (next.second)
-				states.push(next.second);
-	}
-}
-
 AFD& AFD::operator&=(AFD& other)
 {
 	uint32_t index = std::stoi(m_end->name.substr(1, m_end->name.size() - 1)) + 1;
@@ -80,10 +64,8 @@ AFD& AFD::operator|=(AFD& other)
 {
 	uint32_t index = 1;
 	updateIndexes(index);
-	index = std::stoi(m_end->name.substr(1, m_end->name.size() - 1)) + 1;
 	other.updateIndexes(index);
 	other.m_end->final = false;
-	index = std::stoi(other.m_end->name.substr(1, other.m_end->name.size() - 1)) + 1;
 
 	m_alphabet = getAlphabetUnion(*this, other);
 
@@ -107,6 +89,37 @@ AFD& AFD::operator|=(AFD& other)
 
 	m_begin = newStart;
 	m_end = newEnd;
+
+	m_finalStates = { m_end };
+
+	return *this;
+}
+
+AFD& AFD::operator++(int)
+{
+	uint32_t index = 1;
+	updateIndexes(index);
+
+	std::shared_ptr<State> newStart = std::make_shared<State>();
+	newStart->name = "q0";
+	newStart->connections.emplace_back(lambda, m_begin);
+
+	m_transitions.push_front(newStart);
+
+	std::shared_ptr<State> newEnd = std::make_shared<State>();
+	newEnd->name = "q" + std::to_string(index);
+	newEnd->final = true;
+
+	m_end->connections.emplace_back(lambda, m_begin);
+	m_end->connections.emplace_back(lambda, newEnd);
+	m_end->final = false;
+
+	m_begin = newStart;
+	m_end = newEnd;
+
+	m_begin->connections.emplace_back(lambda, m_end);
+
+	m_transitions.push_back(newEnd);
 
 	m_finalStates = { m_end };
 

@@ -94,6 +94,125 @@ AFD::AFD(char symbol)
 	m_finalStates.push_back(m_end);
 }
 
+void AFD::addDotsToRegex(std::string& regex)
+{
+	std::string newRegex = "";
+	for (auto it = regex.begin(); it != regex.end(); ++it)
+	{
+		newRegex += *it;
+		if (*it != '.' && *it != '(' && *it != '|')
+		{
+			if (it + 1 != regex.end())
+			{
+				char nextValue = *(it + 1);
+				if (nextValue != '.' && nextValue != ')' && nextValue != '*' && nextValue != '|')
+				{
+					newRegex += '.';
+				}
+			}
+		}
+	}
+
+	regex = newRegex;
+}
+
+int AFD::getPriority(char ch) const
+{
+	switch (ch)
+	{
+	case '(': return 0;
+	case '|': return 1;
+	case '.': return 2;
+	case '*': return 3;
+	}
+
+	return -100;
+}
+
+AFD::AFD(const std::string& regex)
+{
+	std::string reg = regex;
+
+	//remove unnecessary dots
+	std::erase(reg, '.');
+	addDotsToRegex(reg);
+
+	std::vector<char> polishForm;
+	std::stack<char> signs;
+
+	for (auto ch : reg)
+	{
+		if (ch != '.' && ch != '|' && ch != '(' && ch != ')' && ch != '*')
+		{
+			polishForm.push_back(ch);
+		}
+		else if (ch == '(')
+			signs.push(ch);
+		else if (ch == ')')
+		{
+			while (!signs.empty() && signs.top() != '(')
+			{
+				polishForm.push_back(signs.top());
+				signs.pop();
+			}
+			signs.pop();
+		}
+		else
+		{
+			while (!signs.empty() && getPriority(signs.top()) >= getPriority(ch))
+			{
+				polishForm.push_back(signs.top());
+				signs.pop();
+			}
+			signs.push(ch);
+		}
+	}
+	while (!signs.empty())
+	{
+		polishForm.push_back(signs.top());
+		signs.pop();
+	}
+
+	for (auto ch : polishForm)
+		std::cout << ch;
+
+	std::stack<AFD> finalEval;
+	for (auto ch : polishForm)
+	{
+		if (getPriority(ch) == -100)
+		{
+			AFD z(ch);
+			finalEval.push(z);
+		}
+		else
+		{
+			if (ch == '*')
+			{
+				AFD y = finalEval.top();
+				finalEval.pop();
+				y++;
+				finalEval.push(y);
+			}
+			else
+			{
+				AFD y = finalEval.top();
+				finalEval.pop();
+				AFD x = finalEval.top();
+				finalEval.pop();
+
+				if (ch == '|')
+					x |= y;
+				else if (ch == '.')
+					x &= y;
+
+				finalEval.push(x);
+			}
+		}
+	}
+
+	*this = finalEval.top();
+}
+
 AFD& AFD::operator&=(AFD& other)
 {
 	uint32_t index = std::stoi(m_end->name.substr(1, m_end->name.size() - 1)) + 1;

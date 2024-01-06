@@ -7,6 +7,8 @@
 #include <memory>
 #include <unordered_set>
 #include <ostream>
+#include <stack>
+#include <iostream>
 
 class AFD
 {
@@ -41,9 +43,15 @@ private:
 
 	bool isDeterministic() const;
 
+	int getPriority(char ch) const;
+
+	void addDotsToRegex(std::string& regex);
+
 public:
 
 	AFD(char);
+	
+	AFD(const std::string&);
 
 	//concatenation
 	AFD& operator&=(AFD&);

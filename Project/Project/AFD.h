@@ -2,11 +2,11 @@
 #include <vector>
 #include <string>
 #include <queue>
-#include <print>
 #include <format>
 #include <unordered_map>
 #include <memory>
 #include <unordered_set>
+#include <ostream>
 
 class AFD
 {
@@ -35,7 +35,6 @@ private:
 	
 	friend std::vector<char> getAlphabetUnion(const AFD& afd1, const AFD& afd2);
 	
-
 public:
 
 	AFD(char);

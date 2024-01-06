@@ -139,24 +139,24 @@ std::vector<char> getAlphabetUnion(const AFD& afd1, const AFD& afd2)
 
 std::ostream& operator<<(std::ostream& out, const AFD& afd)
 {
-	std::print("States:\n");
+	out << std::format("States:\n");
 	for (const auto& state : afd.m_transitions)
-		std::print("{} ", state->name);
+		out << std::format("{} ", state->name);
 
-	std::println("\n\nAlphabet:");
+	out << std::format("\n\nAlphabet:\n");
 	for (const auto& letter : afd.m_alphabet)
-		std::print("{} ", letter);
+		out << std::format("{} ", letter);
 
-	std::println("\n\nTransitions:");
+	out << std::format("\n\nTransitions:\n");
 	for (const auto& state : afd.m_transitions)
 		for (const auto& next : state->connections)
-			std::println("({0},{1}) -> {2}", state->name, next.first, next.second->name);
+			out << std::format("({0},{1}) -> {2}\n", state->name, next.first, next.second->name);
 
-	std::println("\nStart state:\n{}", afd.m_begin->name);
+	out << std::format("\nStart state:\n{}\n", afd.m_begin->name);
 
-	std::println("\nFinal states:");
+	out << std::format("\nFinal states:\n");
 	for (const auto& state : afd.m_finalStates)
-		std::print("{} ", state->name);
+		out << std::format("{} ", state->name);
 
 	return out;
 }

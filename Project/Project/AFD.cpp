@@ -198,6 +198,27 @@ bool AFD::verifyAutomaton() const
 	return true;
 }
 
+bool AFD::checkWord(std::string word) const
+{
+	uint32_t index = 0;
+	State* state = m_begin.get();
+	while (true)
+	{
+		if (index == word.size())
+			return true;
+		for (const auto& next : state->transitions)
+		{
+			if (word[index] == next.first)
+			{
+				index++;
+				state = next.second.get();
+				continue;
+			}
+		}
+		return false;
+	}
+}
+
 std::vector<char> getAlphabetUnion(const AFD& afd1, const AFD& afd2)
 {
 	std::vector<char> alphabet;

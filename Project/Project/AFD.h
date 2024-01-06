@@ -54,6 +54,8 @@ public:
 
 	bool verifyAutomaton() const;
 
+	bool checkWord(std::string word) const;
+
 	friend std::ostream& operator<<(std::ostream&, const AFD&);
 };
 

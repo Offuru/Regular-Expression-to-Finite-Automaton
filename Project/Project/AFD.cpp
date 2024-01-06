@@ -38,15 +38,10 @@ bool AFD::validTransitions() const
 {
 	return std::all_of(m_states.cbegin(), m_states.cend(), [&](const auto& state)
 					   {
-						   if (std::find(m_states.cbegin(), m_states.cend(), state) == m_states.cend())
-							   return false;
-
 						   for (const auto& transition : state->transitions)
 						   {
 							   const auto& [chr, resultState] = transition;
 
-							   if (chr == lambda && state != resultState)
-								   return false;
 							   if ((std::find(m_alphabet.cbegin(), m_alphabet.cend(), chr) == m_alphabet.cend()))
 								   return false;
 							   if (std::find(m_states.cbegin(), m_states.cend(), resultState) == m_states.cend())
@@ -64,6 +59,11 @@ bool AFD::isDeterministic() const
 						   std::unordered_map<char, int> countAlphabet;
 						   for (const auto& transition : state->transitions)
 						   {
+							   const auto& [chr, resultState] = transition;
+
+							   if (chr == lambda && state != resultState)
+								   return false;
+
 							   countAlphabet[transition.first]++;
 						   }
 

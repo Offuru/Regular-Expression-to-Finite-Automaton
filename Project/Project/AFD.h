@@ -17,7 +17,7 @@ private:
 	struct State
 	{
 		std::string name;
-		std::vector<std::pair<char,std::shared_ptr<State>>> connections;
+		std::vector<std::pair<char,std::shared_ptr<State>>> transitions;
 		bool final = false;
 	};
 
@@ -25,7 +25,7 @@ private:
 
 	std::shared_ptr<State> m_begin;
 	std::shared_ptr<State> m_end;
-	std::deque<std::shared_ptr<State>> m_transitions;
+	std::deque<std::shared_ptr<State>> m_states;
 	std::vector<char> m_alphabet;
 	std::vector<std::shared_ptr<State>> m_finalStates;
 
@@ -34,7 +34,13 @@ private:
 	void addTransitions(const AFD& other);
 	
 	friend std::vector<char> getAlphabetUnion(const AFD& afd1, const AFD& afd2);
-	
+
+	bool finalStatesInStates() const;
+
+	bool validTransitions() const;
+
+	bool isDeterministic() const;
+
 public:
 
 	AFD(char);
@@ -46,6 +52,7 @@ public:
 	//kleene star
 	AFD& operator++(int);
 
+	bool verifyAutomaton() const;
 
 	friend std::ostream& operator<<(std::ostream&, const AFD&);
 };

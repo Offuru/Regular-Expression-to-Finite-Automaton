@@ -85,6 +85,7 @@ AFD& AFD::operator|=(AFD& other)
 	m_transitions.push_back(newEnd);
 
 	m_end->connections.emplace_back(lambda, newEnd);
+	m_end->final = false;
 	other.m_end->connections.emplace_back(lambda, newEnd);
 
 	m_begin = newStart;

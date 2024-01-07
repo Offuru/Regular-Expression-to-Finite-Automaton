@@ -431,20 +431,23 @@ bool AFD::checkWord(std::string word) const
 	uint32_t indexWord = 0;
 	std::shared_ptr currentState = m_begin;
 
-	while (indexWord < word.size())
+	if (word != std::string(1,lambda))
 	{
-		bool foundTransition = false;
-		for (const auto& transition : currentState->transitions)
+		while (indexWord < word.size())
 		{
-			if (transition.first == word[indexWord])
+			bool foundTransition = false;
+			for (const auto& transition : currentState->transitions)
 			{
-				currentState = transition.second;
-				foundTransition = true;
-				break;
+				if (transition.first == word[indexWord])
+				{
+					currentState = transition.second;
+					foundTransition = true;
+					break;
+				}
 			}
+			if (!foundTransition) return false;
+			++indexWord;
 		}
-		if (!foundTransition) return false;
-		++indexWord;
 	}
 	if (!currentState->final)
 		return false;

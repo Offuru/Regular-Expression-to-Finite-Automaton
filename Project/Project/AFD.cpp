@@ -179,6 +179,7 @@ void AFD::convertToDeterministic()
 		}
 	}
 
+	m_begin = newStates.front();
 	m_states = newStates;
 	m_finalStates.clear();
 	for (const auto& state : m_states)
@@ -317,6 +318,8 @@ AFD::AFD(const std::string& regex)
 	}
 
 	*this = finalEval.top();
+
+	this->convertToDeterministic();
 }
 
 AFD& AFD::operator&=(AFD& other)

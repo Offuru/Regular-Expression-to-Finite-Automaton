@@ -19,6 +19,9 @@ int main()
 	afd1 |= afd3;
 	afd1++;	
 
+	AFD regex("aba(aa|bb)*c(ab)*");
+	std::cout << regex << "\n";
+	std::cout << regex.checkWord("abacab");
 	//std::cout << afd1;
 
 	std::string regex;

@@ -320,6 +320,9 @@ AFD::AFD(const std::string& regex)
 	*this = finalEval.top();
 
 	this->convertToDeterministic();
+
+	if (!verifyAutomaton())
+		std::cout << "The automaton is not valid!\n\n";
 }
 
 AFD& AFD::operator&=(AFD& other)

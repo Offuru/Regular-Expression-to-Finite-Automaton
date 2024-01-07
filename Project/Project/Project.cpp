@@ -27,6 +27,12 @@ int main()
 		int answear = 1;
 		AFD automaton(regex);
 
+		if (!automaton.verifyAutomaton())
+		{
+			std::cout << "The automaton is not valid!\n\n";
+			return 0;
+		}
+
 		printMenu();
 		std::ofstream fout("output.txt");
 		while (answear)

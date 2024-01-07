@@ -1,5 +1,22 @@
 #include "AFD.h"
 
+void AFD::printEnclosure(const enclosure& enclosure)
+{
+	std::cout << "{";
+	auto it = enclosure.cbegin();
+	for (;std::next(it) != enclosure.cend(); ++it)
+		std::cout << (*it)->name << ",";
+	std::cout << (*it)->name << "}";
+}
+
+bool AFD::finalEnclosure(const enclosure& enclosure)
+{
+	for (const auto& state : enclosure)
+		if (state->final)
+			return true;
+	return false;
+}
+
 void AFD::updateIndexes(uint32_t& index)
 {
 	std::queue<std::shared_ptr<State>> states;
@@ -75,6 +92,97 @@ bool AFD::isDeterministic() const
 
 						   return true;
 					   });
+
+
+AFD::enclosure AFD::getLambdaEnclosure(const enclosure& state) const
+{
+	enclosure enclosure(state);
+
+	bool changed = true;
+
+	while (changed)
+	{
+		changed = false;
+		for (const auto& curState : enclosure)
+			for (const auto& next : curState->transitions)
+				if (next.first == lambda && enclosure.find(next.second) == enclosure.end())
+				{
+					changed = true;
+					enclosure.insert(next.second);
+				}
+	}
+
+	return enclosure;
+}
+
+bool AFD::inTransitions(const std::shared_ptr<State>& range, const std::shared_ptr<State>& key)
+{
+	for (const auto& state : range->transitions)
+		if (state.second.get() == key.get())
+			return true;
+	return false;
+}
+
+void AFD::convertToDeterministic()
+{
+	using _transition = std::pair<char, enclosure>;
+	std::unordered_multimap<enclosure, _transition> enclosures;
+	std::unordered_map<enclosure, std::shared_ptr<State>> encToState;
+	std::deque<std::shared_ptr<State>> newStates;
+
+	enclosure currentEnclosure{ m_begin };
+	currentEnclosure = getLambdaEnclosure(currentEnclosure);
+
+	uint32_t index = 0;
+	encToState[currentEnclosure] = std::make_shared<State>();
+	encToState[currentEnclosure]->name = "q" + std::to_string(index++);
+	if (finalEnclosure(currentEnclosure))
+		encToState[currentEnclosure]->final = true;
+	newStates.push_back(encToState[currentEnclosure]);
+
+	std::queue<enclosure> queue;
+	queue.push(currentEnclosure);
+
+	while (!queue.empty())
+	{
+		currentEnclosure = queue.front();
+		queue.pop();
+
+		for (char letter : m_alphabet)
+		{
+			enclosure nextEnclosure;
+			
+			for (const auto& state : currentEnclosure)
+				for (const auto& transition : state->transitions)
+					if (transition.first == letter)
+						nextEnclosure.insert(transition.second);
+
+			nextEnclosure = getLambdaEnclosure(nextEnclosure);
+
+			if (nextEnclosure.empty())
+				continue;
+
+			if (encToState.find(nextEnclosure) == encToState.end())
+			{
+				queue.push(nextEnclosure);
+				encToState[nextEnclosure] = std::make_shared<State>();
+				encToState[nextEnclosure]->name = "q" + std::to_string(index++);
+				if (finalEnclosure(nextEnclosure))
+					encToState[nextEnclosure]->final = true;
+				newStates.push_back(encToState[nextEnclosure]);
+
+				encToState[currentEnclosure]->transitions.emplace_back(letter, encToState[nextEnclosure]);
+			}
+			else if (!inTransitions(encToState[currentEnclosure], encToState[nextEnclosure]))
+				encToState[currentEnclosure]->transitions.emplace_back(letter, encToState[nextEnclosure]);
+		}
+	}
+
+	m_states = newStates;
+	m_finalStates.clear();
+	for (const auto& state : m_states)
+		if (state->final)
+			m_finalStates.push_back(state);
 }
 
 AFD::AFD(char symbol)

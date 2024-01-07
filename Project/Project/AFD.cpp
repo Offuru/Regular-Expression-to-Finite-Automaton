@@ -72,26 +72,27 @@ bool AFD::validTransitions() const
 bool AFD::isDeterministic() const
 {
 	return std::all_of(m_states.cbegin(), m_states.cend(), [&](const auto& state)
-					   {
-						   std::unordered_map<char, int> countAlphabet;
-						   for (const auto& transition : state->transitions)
-						   {
-							   const auto& [chr, resultState] = transition;
+		{
+			std::unordered_map<char, int> countAlphabet;
+			for (const auto& transition : state->transitions)
+			{
+				const auto& [chr, resultState] = transition;
 
-							   if (chr == lambda && state != resultState)
-								   return false;
+				if (chr == lambda && state != resultState)
+					return false;
 
-							   countAlphabet[transition.first]++;
-						   }
+				countAlphabet[transition.first]++;
+			}
 
-						   for (const auto& chr : countAlphabet)
-						   {
-							   if (chr.second > 1)
-								   return false;
-						   }
+			for (const auto& chr : countAlphabet)
+			{
+				if (chr.second > 1)
+					return false;
+			}
 
-						   return true;
-					   });
+			return true;
+		});
+}
 
 
 AFD::enclosure AFD::getLambdaEnclosure(const enclosure& state) const

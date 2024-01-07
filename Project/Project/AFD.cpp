@@ -282,9 +282,6 @@ AFD::AFD(const std::string& regex)
 		signs.pop();
 	}
 
-	for (auto ch : polishForm)
-		std::cout << ch;
-
 	std::stack<AFD> finalEval;
 	for (auto ch : polishForm)
 	{
@@ -428,23 +425,27 @@ bool AFD::verifyAutomaton() const
 
 bool AFD::checkWord(std::string word) const
 {
-	uint32_t index = 0;
-	State* state = m_begin.get();
-	while (true)
+	uint32_t indexWord = 0;
+	std::shared_ptr currentState = m_begin;
+
+	while (indexWord < word.size())
 	{
-		if (index == word.size())
-			return true;
-		for (const auto& next : state->transitions)
+		bool foundTransition = false;
+		for (const auto& transition : currentState->transitions)
 		{
-			if (word[index] == next.first)
+			if (transition.first == word[indexWord])
 			{
-				index++;
-				state = next.second.get();
-				continue;
+				currentState = transition.second;
+				foundTransition = true;
+				break;
 			}
 		}
-		return false;
+		if (!foundTransition) return false;
+		++indexWord;
 	}
+	if (!currentState->final)
+		return false;
+	return true;
 }
 
 std::vector<char> getAlphabetUnion(const AFD& afd1, const AFD& afd2)
